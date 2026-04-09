@@ -1,31 +1,41 @@
-// Google Calendar-inspired color palette
-// Each department gets a deterministic color based on its name hash
+/**
+ * Booking card colour system.
+ *
+ * Design rationale:
+ *  - Light card background (easy to read dark text)
+ *  - Bold 4px left border = department identity at a glance
+ *  - High-chroma border colours spaced far apart on the hue wheel
+ *    so adjacent cards never look the same
+ */
+
+// 12 hues, evenly spaced, high saturation so they differ clearly
 const PALETTE = [
-  { bg: '#4285f4', light: '#e8f0fe' }, // Google Blue
-  { bg: '#ea4335', light: '#fce8e6' }, // Google Red
-  { bg: '#0f9d58', light: '#e6f4ea' }, // Google Green
-  { bg: '#9334e6', light: '#f3e8fd' }, // Purple
-  { bg: '#e52592', light: '#fde8f0' }, // Pink
-  { bg: '#e37400', light: '#fef3e2' }, // Orange
-  { bg: '#1a73e8', light: '#e8f0fe' }, // Blue 2
-  { bg: '#137333', light: '#e6f4ea' }, // Dark Green
-  { bg: '#b31412', light: '#fce8e6' }, // Dark Red
-  { bg: '#7627bb', light: '#f3e8fd' }, // Dark Purple
-  { bg: '#00897b', light: '#e0f2f1' }, // Teal
-  { bg: '#c2185b', light: '#fce4ec' }, // Deep Pink
+  { border: '#2563eb', bg: '#eff6ff', text: '#1e3a8a' }, // blue
+  { border: '#dc2626', bg: '#fef2f2', text: '#7f1d1d' }, // red
+  { border: '#16a34a', bg: '#f0fdf4', text: '#14532d' }, // green
+  { border: '#9333ea', bg: '#faf5ff', text: '#581c87' }, // purple
+  { border: '#ea580c', bg: '#fff7ed', text: '#7c2d12' }, // orange
+  { border: '#0891b2', bg: '#ecfeff', text: '#164e63' }, // cyan
+  { border: '#ca8a04', bg: '#fefce8', text: '#713f12' }, // yellow
+  { border: '#e11d48', bg: '#fff1f2', text: '#881337' }, // rose
+  { border: '#4338ca', bg: '#eef2ff', text: '#312e81' }, // indigo
+  { border: '#0d9488', bg: '#f0fdfa', text: '#134e4a' }, // teal
+  { border: '#7c3aed', bg: '#f5f3ff', text: '#4c1d95' }, // violet
+  { border: '#15803d', bg: '#f0fdf4', text: '#14532d' }, // dark green
 ];
 
-// Students always get a consistent warm orange
-const STUDENT_COLOR = { bg: '#e37400', light: '#fef3e2' };
-// Recurring/fixed bookings get a distinct slate color
-const RECURRING_COLOR = { bg: '#5f6368', light: '#f1f3f4' };
+// Students → warm amber
+const STUDENT_COLOR = { border: '#d97706', bg: '#fffbeb', text: '#78350f' };
+
+// Recurring / fixed → slate (clearly "system-managed")
+const RECURRING_COLOR = { border: '#475569', bg: '#f8fafc', text: '#1e293b' };
 
 function hashString(str) {
-  let hash = 0;
+  let h = 0;
   for (let i = 0; i < str.length; i++) {
-    hash = Math.imul(31, hash) + str.charCodeAt(i) | 0;
+    h = Math.imul(31, h) + str.charCodeAt(i) | 0;
   }
-  return Math.abs(hash);
+  return Math.abs(h);
 }
 
 export function getBookingColor(booking) {

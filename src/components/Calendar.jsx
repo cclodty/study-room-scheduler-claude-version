@@ -87,7 +87,7 @@ export default function Calendar() {
     <div key={refreshKey} className="space-y-3">
 
       {/* ── Week navigation ─────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between bg-white rounded-xl shadow-sm px-4 py-2.5 border border-gray-100">
+      <div className="flex items-center justify-between bg-white rounded-xl shadow-sm px-4 py-2.5 border border-slate-200">
         <button onClick={prevWeek}
           className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-500 text-xl transition-colors">
           ‹
@@ -107,13 +107,12 @@ export default function Calendar() {
       </div>
 
       {/* ── DESKTOP: weekly grid (md+) ──────────────────────────────────── */}
-      <div className="hidden md:block bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="hidden md:block bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
         <table className="w-full border-collapse text-xs">
           <thead>
             <tr>
-              {/* Time column header */}
-              <th className="w-[88px] px-3 py-3 text-left border-b border-r border-gray-100 bg-gray-50">
-                <span className="text-gray-400 font-normal text-xs">時段</span>
+              <th className="w-[88px] px-3 py-3 text-left border-b border-r border-slate-100 bg-slate-50">
+                <span className="text-slate-400 font-normal text-xs">時段</span>
               </th>
               {weekDays.map((d, i) => {
                 const dateStr = toDateStr(d);
@@ -121,20 +120,20 @@ export default function Calendar() {
                 const blocked = isDateBlocked(dateStr);
                 return (
                   <th key={dateStr}
-                    className={`px-2 py-3 text-center border-b border-r border-gray-100 last:border-r-0 font-normal
-                      ${blocked ? 'bg-red-50' : isToday ? 'bg-blue-50' : 'bg-gray-50'}`}>
+                    className={`px-2 py-3 text-center border-b border-r border-slate-100 last:border-r-0 font-normal
+                      ${blocked ? 'bg-red-50' : isToday ? 'bg-blue-50' : 'bg-slate-50'}`}>
                     <div className="flex flex-col items-center gap-1">
-                      <span className={`text-xs ${blocked ? 'text-red-400' : isToday ? 'text-blue-600' : 'text-gray-500'}`}>
+                      <span className={`text-xs font-medium ${blocked ? 'text-red-400' : isToday ? 'text-blue-600' : 'text-slate-500'}`}>
                         週{DAY_NAMES[i]}
                       </span>
-                      <span className={`w-8 h-8 flex items-center justify-center rounded-full text-sm font-semibold
-                        ${isToday ? 'bg-blue-600 text-white' : blocked ? 'text-red-400' : 'text-gray-800'}`}>
+                      <span className={`w-8 h-8 flex items-center justify-center rounded-full text-sm font-bold
+                        ${isToday ? 'bg-blue-600 text-white' : blocked ? 'text-red-400' : 'text-slate-800'}`}>
                         {d.format('D')}
                       </span>
-                      <span className={`text-xs ${blocked ? 'text-red-400' : isToday ? 'text-blue-500' : 'text-gray-400'}`}>
+                      <span className={`text-xs ${blocked ? 'text-red-400' : isToday ? 'text-blue-500' : 'text-slate-400'}`}>
                         {d.format('MM/DD')}
                       </span>
-                      {blocked && <span className="text-xs text-red-400">不開放</span>}
+                      {blocked && <span className="text-xs text-red-400 font-medium">不開放</span>}
                     </div>
                   </th>
                 );
@@ -143,11 +142,10 @@ export default function Calendar() {
           </thead>
           <tbody>
             {TIME_SLOTS.map((slot, si) => (
-              <tr key={slot.id} className={si % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}>
-                {/* Time label */}
-                <td className="px-3 py-1.5 border-b border-r border-gray-100 text-center align-middle">
-                  <div className="font-medium text-gray-700 text-xs whitespace-nowrap">{slot.label}</div>
-                  <div className="text-gray-400 text-xs mt-0.5 whitespace-nowrap">{slot.time}</div>
+              <tr key={slot.id} className={si % 2 === 0 ? 'bg-white' : 'bg-slate-50/40'}>
+                <td className="px-3 py-1.5 border-b border-r border-slate-100 text-center align-middle bg-slate-50">
+                  <div className="font-semibold text-slate-700 text-xs whitespace-nowrap">{slot.label}</div>
+                  <div className="text-slate-400 text-xs mt-0.5 whitespace-nowrap">{slot.time}</div>
                 </td>
                 {weekDays.map((d) => {
                   const dateStr = toDateStr(d);
@@ -156,8 +154,8 @@ export default function Calendar() {
                   const smallBooking = getBookingForCell(dateStr, slot.id, 'small');
                   return (
                     <td key={dateStr}
-                      className={`border-b border-r border-gray-100 last:border-r-0 p-1 align-top
-                        ${blocked ? 'bg-red-50/60' : ''}`}>
+                      className={`border-b border-r border-slate-100 last:border-r-0 p-1 align-top
+                        ${blocked ? 'bg-red-50/50' : dateStr === todayStr ? 'bg-blue-50/30' : ''}`}>
                       <div className="flex gap-1">
                         <div className="flex-1">
                           <TimeSlotCell booking={largeBooking} room="large" blocked={blocked}
@@ -192,7 +190,7 @@ export default function Calendar() {
                   ${active ? 'bg-blue-600 text-white shadow-sm' :
                     isToday ? 'bg-blue-50 text-blue-700' :
                     blocked ? 'bg-red-50 text-red-400' :
-                    'bg-white text-gray-600 border border-gray-100'}`}>
+                    'bg-white text-slate-600 border border-slate-200'}`}>
                 <span className="text-xs opacity-80">{DAY_NAMES[i]}</span>
                 <span className={`text-lg font-bold leading-tight ${active ? '' : isToday ? 'text-blue-600' : ''}`}>
                   {d.format('D')}
@@ -209,7 +207,7 @@ export default function Calendar() {
           const dateStr = toDateStr(d);
           const blocked = isDateBlocked(dateStr);
           return (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
               {blocked && (
                 <div className="bg-red-50 text-red-500 text-center text-sm py-2 font-medium">
                   此日期不開放預約
@@ -246,7 +244,7 @@ export default function Calendar() {
       </div>
 
       {/* ── Color legend (departments visible this week) ─────────────────── */}
-      <div className="bg-white rounded-xl border border-gray-100 px-4 py-3">
+      <div className="bg-white rounded-xl border border-slate-200 px-4 py-3">
         <div className="flex flex-wrap gap-x-4 gap-y-2 items-center">
           <span className="text-xs text-gray-400 font-medium mr-1">本週科組：</span>
           {Object.entries(legendMap).map(([dept, color]) => (

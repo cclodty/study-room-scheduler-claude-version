@@ -1,67 +1,63 @@
 import { getBookingColor } from '../utils/colorUtils';
 
-/**
- * Google Calendar–style room cell.
- * Props:
- *   booking   – booking object or null
- *   room      – 'large' | 'small'
- *   blocked   – boolean: date is blocked
- *   mobile    – boolean: mobile layout
- *   onClick   – click handler
- */
 export default function TimeSlotCell({ booking, room, blocked, mobile, onClick }) {
   const roomLabel = room === 'large' ? '大研討室' : '小研討室';
   const roomShort = room === 'large' ? '大' : '小';
+  const height = mobile ? 'h-14' : 'h-12';
 
-  // ── Blocked ──────────────────────────────────────────────────────────────
+  // ── Blocked ─────────────────────────────────────────────────────────────
   if (blocked) {
     return (
-      <div className={`${mobile ? 'w-full h-12' : 'w-full h-11'} rounded flex items-center justify-center bg-gray-50`}>
-        <span className="text-gray-300 text-xs">—</span>
+      <div className={`w-full ${height} rounded-lg flex items-center justify-center bg-slate-50`}>
+        <span className="text-slate-300 text-xs">—</span>
       </div>
     );
   }
 
-  // ── Empty slot ───────────────────────────────────────────────────────────
+  // ── Empty ────────────────────────────────────────────────────────────────
   if (!booking) {
     return (
-      <button
-        onClick={onClick}
-        className={`group ${mobile ? 'w-full h-12' : 'w-full h-11'} rounded flex flex-col items-center justify-center gap-0.5 transition-colors hover:bg-blue-50 border border-transparent hover:border-blue-100`}
-      >
-        <span className="text-gray-300 text-xs group-hover:hidden leading-none">{roomShort}</span>
-        <span className="hidden group-hover:flex items-center justify-center w-5 h-5 rounded-full bg-blue-100 text-blue-600 text-sm leading-none">+</span>
-        <span className="hidden group-hover:block text-blue-500 text-xs leading-none">{roomShort}</span>
+      <button onClick={onClick}
+        className={`group w-full ${height} rounded-lg flex flex-col items-center justify-center gap-0.5
+          border border-dashed border-slate-200 hover:border-blue-300 hover:bg-blue-50 transition-all`}>
+        <span className="text-slate-300 text-xs group-hover:text-blue-400 transition-colors font-medium">
+          {roomShort}
+        </span>
+        <span className="text-slate-200 text-base leading-none group-hover:text-blue-400 transition-colors">+</span>
       </button>
     );
   }
 
-  // ── Booked slot ──────────────────────────────────────────────────────────
+  // ── Booked ───────────────────────────────────────────────────────────────
   const color = getBookingColor(booking);
   const isRecurring = booking.isRecurringInstance || booking.isRecurring;
-  const label = booking.type === 'teacher' ? booking.department : booking.class;
+  const subLabel = booking.type === 'teacher' ? booking.department : booking.class;
 
   return (
-    <button
-      onClick={onClick}
-      style={{ backgroundColor: color.bg }}
-      className={`${mobile ? 'w-full h-12 px-2' : 'w-full h-11 px-1.5'} rounded flex flex-col justify-center gap-0.5 text-left transition-opacity hover:opacity-90 overflow-hidden`}
-    >
-      {/* Room badge + recurring indicator */}
+    <button onClick={onClick}
+      style={{
+        backgroundColor: color.bg,
+        borderLeftColor: color.border,
+        color: color.text,
+      }}
+      className={`w-full ${height} rounded-lg border-l-4 border border-transparent px-2
+        flex flex-col justify-center gap-0.5 text-left hover:brightness-95 transition-all overflow-hidden`}>
+
+      {/* Room badge */}
       <div className="flex items-center gap-1">
-        <span className="text-white/70 text-xs leading-none font-medium">{roomShort}</span>
-        {isRecurring && (
-          <span className="text-white/60 text-xs leading-none">↻</span>
-        )}
+        <span className="text-xs leading-none font-semibold opacity-60">{roomShort}</span>
+        {isRecurring && <span className="text-xs leading-none opacity-50">↻</span>}
       </div>
+
       {/* Name */}
-      <span className="text-white font-semibold text-xs leading-snug truncate w-full">
+      <span className="text-xs font-bold leading-snug truncate w-full">
         {booking.name}
       </span>
+
       {/* Department / Class */}
-      {label && (
-        <span className="text-white/80 text-xs leading-none truncate w-full">
-          {label}
+      {subLabel && (
+        <span className="text-xs leading-none truncate w-full opacity-70">
+          {subLabel}
         </span>
       )}
     </button>
