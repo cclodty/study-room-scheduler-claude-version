@@ -1,5 +1,7 @@
+import { getBookingColor } from '../utils/colorUtils';
+
 /**
- * A single room cell inside a time-slot row.
+ * Google Calendar–style room cell.
  * Props:
  *   booking   – booking object or null
  *   room      – 'large' | 'small'
@@ -9,44 +11,59 @@
  */
 export default function TimeSlotCell({ booking, room, blocked, mobile, onClick }) {
   const roomLabel = room === 'large' ? '大研討室' : '小研討室';
+  const roomShort = room === 'large' ? '大' : '小';
 
+  // ── Blocked ──────────────────────────────────────────────────────────────
   if (blocked) {
     return (
-      <div className={`${mobile ? 'w-full py-3' : 'w-full min-h-[44px]'} rounded bg-red-50 flex items-center justify-center`}>
-        <span className="text-red-300 text-xs">—</span>
+      <div className={`${mobile ? 'w-full h-12' : 'w-full h-11'} rounded flex items-center justify-center bg-gray-50`}>
+        <span className="text-gray-300 text-xs">—</span>
       </div>
     );
   }
 
+  // ── Empty slot ───────────────────────────────────────────────────────────
   if (!booking) {
     return (
       <button
         onClick={onClick}
-        className={`${mobile ? 'w-full py-3' : 'w-full min-h-[44px]'} rounded border border-dashed border-gray-200 bg-gray-50 hover:bg-blue-50 hover:border-blue-300 transition-colors flex flex-col items-center justify-center gap-0.5`}
+        className={`group ${mobile ? 'w-full h-12' : 'w-full h-11'} rounded flex flex-col items-center justify-center gap-0.5 transition-colors hover:bg-blue-50 border border-transparent hover:border-blue-100`}
       >
-        <span className="text-gray-400 text-xs">{roomLabel}</span>
-        <span className="text-blue-400 text-xs">+ 預約</span>
+        <span className="text-gray-300 text-xs group-hover:hidden leading-none">{roomShort}</span>
+        <span className="hidden group-hover:flex items-center justify-center w-5 h-5 rounded-full bg-blue-100 text-blue-600 text-sm leading-none">+</span>
+        <span className="hidden group-hover:block text-blue-500 text-xs leading-none">{roomShort}</span>
       </button>
     );
   }
 
+  // ── Booked slot ──────────────────────────────────────────────────────────
+  const color = getBookingColor(booking);
   const isRecurring = booking.isRecurringInstance || booking.isRecurring;
-  const bgClass = isRecurring
-    ? 'bg-blue-50 border-blue-200 hover:bg-blue-100'
-    : 'bg-green-50 border-green-300 hover:bg-green-100';
-
-  const name = booking.name || '';
-  const sub = booking.type === 'teacher' ? booking.department : booking.class;
+  const label = booking.type === 'teacher' ? booking.department : booking.class;
 
   return (
     <button
       onClick={onClick}
-      className={`${mobile ? 'w-full py-2 px-2' : 'w-full min-h-[44px] px-1 py-1'} rounded border ${bgClass} transition-colors flex flex-col items-start justify-center gap-0.5 text-left`}
+      style={{ backgroundColor: color.bg }}
+      className={`${mobile ? 'w-full h-12 px-2' : 'w-full h-11 px-1.5'} rounded flex flex-col justify-center gap-0.5 text-left transition-opacity hover:opacity-90 overflow-hidden`}
     >
-      <span className="text-gray-500 text-xs leading-none">{roomLabel}</span>
-      <span className="text-gray-800 font-medium text-xs leading-snug truncate w-full">{name}</span>
-      {sub && <span className="text-gray-500 text-xs leading-none truncate w-full">{sub}</span>}
-      {isRecurring && <span className="text-blue-400 text-xs leading-none">固定</span>}
+      {/* Room badge + recurring indicator */}
+      <div className="flex items-center gap-1">
+        <span className="text-white/70 text-xs leading-none font-medium">{roomShort}</span>
+        {isRecurring && (
+          <span className="text-white/60 text-xs leading-none">↻</span>
+        )}
+      </div>
+      {/* Name */}
+      <span className="text-white font-semibold text-xs leading-snug truncate w-full">
+        {booking.name}
+      </span>
+      {/* Department / Class */}
+      {label && (
+        <span className="text-white/80 text-xs leading-none truncate w-full">
+          {label}
+        </span>
+      )}
     </button>
   );
 }
