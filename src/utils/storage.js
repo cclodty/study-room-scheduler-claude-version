@@ -1,18 +1,26 @@
-import { supabase } from './supabase';
+import { supabase, supabaseConfigured } from './supabase';
 
 // Admin password stays local (device-specific auth, not shared)
 const ADMIN_PW_KEY = 'lrs_admin_password';
 const DEFAULT_ADMIN_PASSWORD = 'admin1234';
 
+function requireSupabase() {
+  if (!supabaseConfigured || !supabase) {
+    throw new Error('Supabase 未設定，請檢查 VITE_SUPABASE_URL 及 VITE_SUPABASE_ANON_KEY。');
+  }
+}
+
 // ── Bookings ─────────────────────────────────────────────────────────────────
 
 export async function getBookings() {
+  requireSupabase();
   const { data, error } = await supabase.from('bookings').select('*');
   if (error) { console.error('getBookings:', error); return []; }
   return data.map(dbToBooking);
 }
 
 export async function addBooking(booking) {
+  requireSupabase();
   const { error } = await supabase.from('bookings').insert(bookingToDb(booking));
   if (error) throw error;
 }
