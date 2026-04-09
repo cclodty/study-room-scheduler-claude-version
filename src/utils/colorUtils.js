@@ -1,40 +1,28 @@
-/**
- * Booking card colour system.
- *
- * Design rationale:
- *  - Light card background (easy to read dark text)
- *  - Bold 4px left border = department identity at a glance
- *  - High-chroma border colours spaced far apart on the hue wheel
- *    so adjacent cards never look the same
- */
-
-// 12 hues, evenly spaced, high saturation so they differ clearly
+// Full-colour Google-Calendar style palette.
+// High-chroma, well-separated hues → each dept stands out immediately.
 const PALETTE = [
-  { border: '#2563eb', bg: '#eff6ff', text: '#1e3a8a' }, // blue
-  { border: '#dc2626', bg: '#fef2f2', text: '#7f1d1d' }, // red
-  { border: '#16a34a', bg: '#f0fdf4', text: '#14532d' }, // green
-  { border: '#9333ea', bg: '#faf5ff', text: '#581c87' }, // purple
-  { border: '#ea580c', bg: '#fff7ed', text: '#7c2d12' }, // orange
-  { border: '#0891b2', bg: '#ecfeff', text: '#164e63' }, // cyan
-  { border: '#ca8a04', bg: '#fefce8', text: '#713f12' }, // yellow
-  { border: '#e11d48', bg: '#fff1f2', text: '#881337' }, // rose
-  { border: '#4338ca', bg: '#eef2ff', text: '#312e81' }, // indigo
-  { border: '#0d9488', bg: '#f0fdfa', text: '#134e4a' }, // teal
-  { border: '#7c3aed', bg: '#f5f3ff', text: '#4c1d95' }, // violet
-  { border: '#15803d', bg: '#f0fdf4', text: '#14532d' }, // dark green
+  { bg: '#1a73e8', text: '#fff' }, // Google Blue
+  { bg: '#d93025', text: '#fff' }, // Google Red
+  { bg: '#188038', text: '#fff' }, // Google Green
+  { bg: '#8430ce', text: '#fff' }, // Purple
+  { bg: '#e37400', text: '#fff' }, // Orange
+  { bg: '#0097a7', text: '#fff' }, // Cyan
+  { bg: '#c0392b', text: '#fff' }, // Dark Red
+  { bg: '#6a1b9a', text: '#fff' }, // Dark Purple
+  { bg: '#00695c', text: '#fff' }, // Teal
+  { bg: '#1565c0', text: '#fff' }, // Dark Blue
+  { bg: '#558b2f', text: '#fff' }, // Olive Green
+  { bg: '#ad1457', text: '#fff' }, // Pink
 ];
 
-// Students → warm amber
-const STUDENT_COLOR = { border: '#d97706', bg: '#fffbeb', text: '#78350f' };
-
-// Recurring / fixed → slate (clearly "system-managed")
-const RECURRING_COLOR = { border: '#475569', bg: '#f8fafc', text: '#1e293b' };
+// Students → amber-brown (distinct from all teacher colours)
+const STUDENT_COLOR = { bg: '#b45309', text: '#fff' };
+// Recurring/fixed → neutral slate
+const RECURRING_COLOR = { bg: '#475569', text: '#fff' };
 
 function hashString(str) {
   let h = 0;
-  for (let i = 0; i < str.length; i++) {
-    h = Math.imul(31, h) + str.charCodeAt(i) | 0;
-  }
+  for (let i = 0; i < str.length; i++) h = (Math.imul(31, h) + str.charCodeAt(i)) | 0;
   return Math.abs(h);
 }
 

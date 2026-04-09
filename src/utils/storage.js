@@ -1,121 +1,132 @@
-const KEYS = {
-  BOOKINGS: 'lrs_bookings',
-  RECURRING: 'lrs_recurring',
-  BLOCKED_DATES: 'lrs_blocked_dates',
-  ADMIN_PASSWORD: 'lrs_admin_password',
-};
+import { supabase } from './supabase';
 
+// Admin password stays local (device-specific auth, not shared)
+const ADMIN_PW_KEY = 'lrs_admin_password';
 const DEFAULT_ADMIN_PASSWORD = 'admin1234';
-
-// ── Generic helpers ─────────────────────────────────────────────────────────
-
-function load(key, fallback) {
-  try {
-    const raw = localStorage.getItem(key);
-    return raw ? JSON.parse(raw) : fallback;
-  } catch {
-    return fallback;
-  }
-}
-
-function save(key, value) {
-  localStorage.setItem(key, JSON.stringify(value));
-}
 
 // ── Bookings ─────────────────────────────────────────────────────────────────
 
-export function getBookings() {
-  return load(KEYS.BOOKINGS, []);
+export async function getBookings() {
+  const { data, error } = await supabase.from('bookings').select('*');
+  if (error) { console.error('getBookings:', error); return []; }
+  return data.map(dbToBooking);
 }
 
-export function addBooking(booking) {
-  const bookings = getBookings();
-  bookings.push(booking);
-  save(KEYS.BOOKINGS, bookings);
+export async function addBooking(booking) {
+  const { error } = await supabase.from('bookings').insert(bookingToDb(booking));
+  if (error) throw error;
 }
 
-export function removeBooking(id) {
-  const bookings = getBookings().filter((b) => b.id !== id);
-  save(KEYS.BOOKINGS, bookings);
+export async function removeBooking(id) {
+  const { error } = await supabase.from('bookings').delete().eq('id', id);
+  if (error) throw error;
 }
 
-export function removeBookingsByIds(ids) {
-  const set = new Set(ids);
-  const bookings = getBookings().filter((b) => !set.has(b.id));
-  save(KEYS.BOOKINGS, bookings);
+export async function removeBookingsByIds(ids) {
+  const { error } = await supabase.from('bookings').delete().in('id', ids);
+  if (error) throw error;
 }
 
-export function removeBookingsByDateRange(startDate, endDate) {
-  const bookings = getBookings().filter((b) => b.date < startDate || b.date > endDate);
-  save(KEYS.BOOKINGS, bookings);
+export async function removeBookingsByDateRange(startDate, endDate) {
+  const { error } = await supabase
+    .from('bookings')
+    .delete()
+    .gte('date', startDate)
+    .lte('date', endDate);
+  if (error) throw error;
 }
 
-// ── Recurring bookings ───────────────────────────────────────────────────────
+// ── Recurring ─────────────────────────────────────────────────────────────────
 
-export function getRecurring() {
-  return load(KEYS.RECURRING, []);
+export async function getRecurring() {
+  const { data, error } = await supabase.from('recurring').select('*');
+  if (error) { console.error('getRecurring:', error); return []; }
+  return data.map(dbToRecurring);
 }
 
-export function addRecurring(rule) {
-  const list = getRecurring();
-  list.push(rule);
-  save(KEYS.RECURRING, list);
+export async function addRecurring(rule) {
+  const { error } = await supabase.from('recurring').insert(recurringToDb(rule));
+  if (error) throw error;
 }
 
-export function removeRecurring(id) {
-  const list = getRecurring().filter((r) => r.id !== id);
-  save(KEYS.RECURRING, list);
+export async function removeRecurring(id) {
+  const { error } = await supabase.from('recurring').delete().eq('id', id);
+  if (error) throw error;
 }
 
-// ── Blocked dates ────────────────────────────────────────────────────────────
+// ── Blocked dates ─────────────────────────────────────────────────────────────
 
-export function getBlockedDates() {
-  return load(KEYS.BLOCKED_DATES, []);
+export async function getBlockedDates() {
+  const { data, error } = await supabase.from('blocked_dates').select('*');
+  if (error) { console.error('getBlockedDates:', error); return []; }
+  return data;
 }
 
-export function addBlockedDate(entry) {
-  const list = getBlockedDates();
-  if (!list.find((d) => d.date === entry.date)) {
-    list.push(entry);
-    save(KEYS.BLOCKED_DATES, list);
-  }
+export async function addBlockedDate(entry) {
+  const { error } = await supabase
+    .from('blocked_dates')
+    .upsert({ date: entry.date, reason: entry.reason || '' });
+  if (error) throw error;
 }
 
-export function removeBlockedDate(date) {
-  const list = getBlockedDates().filter((d) => d.date !== date);
-  save(KEYS.BLOCKED_DATES, list);
+export async function removeBlockedDate(date) {
+  const { error } = await supabase.from('blocked_dates').delete().eq('date', date);
+  if (error) throw error;
 }
 
-// ── Admin password ───────────────────────────────────────────────────────────
+// ── Admin password (localStorage) ────────────────────────────────────────────
 
 export function getAdminPassword() {
-  return load(KEYS.ADMIN_PASSWORD, DEFAULT_ADMIN_PASSWORD);
+  try { return JSON.parse(localStorage.getItem(ADMIN_PW_KEY)) || DEFAULT_ADMIN_PASSWORD; }
+  catch { return DEFAULT_ADMIN_PASSWORD; }
 }
 
 export function setAdminPassword(pw) {
-  save(KEYS.ADMIN_PASSWORD, pw);
+  localStorage.setItem(ADMIN_PW_KEY, JSON.stringify(pw));
 }
 
 export function verifyAdminPassword(pw) {
   return pw === getAdminPassword();
 }
 
-// ── Helpers for conflict check ────────────────────────────────────────────────
+// ── DB ↔ JS field mapping ────────────────────────────────────────────────────
 
-export function isSlotBooked(date, slotId, roomId) {
-  return getBookings().some((b) => b.date === date && b.slotId === slotId && b.room === roomId);
+function bookingToDb(b) {
+  return {
+    id: b.id, date: b.date, slot_id: b.slotId, room: b.room,
+    type: b.type, name: b.name, department: b.department || null,
+    class: b.class || null, purpose: b.purpose || null,
+    headcount: b.headcount || null, cancel_code: b.cancelCode,
+    created_at: b.createdAt,
+  };
 }
 
-export function isDateBlocked(date) {
-  return getBlockedDates().some((d) => d.date === date);
+function dbToBooking(r) {
+  return {
+    id: r.id, date: r.date, slotId: r.slot_id, room: r.room,
+    type: r.type, name: r.name, department: r.department || '',
+    class: r.class || '', purpose: r.purpose || '',
+    headcount: r.headcount || 0, cancelCode: r.cancel_code,
+    createdAt: r.created_at,
+  };
 }
 
-/**
- * Returns all recurring rules that apply to a given date+slotId combination.
- */
-export function getRecurringForSlot(date, slotId) {
-  // dayjs not imported here to keep utils pure; caller passes dayOfWeek
-  return getRecurring().filter(
-    (r) => r.slotId === slotId && r.startDate <= date && (!r.endDate || r.endDate >= date),
-  );
+function recurringToDb(r) {
+  return {
+    id: r.id, day_of_week: r.dayOfWeek, slot_id: r.slotId, room: r.room,
+    type: r.type, name: r.name, department: r.department || null,
+    class: r.class || null, purpose: r.purpose || null,
+    headcount: r.headcount || null, start_date: r.startDate,
+    end_date: r.endDate || null, is_recurring: true,
+  };
+}
+
+function dbToRecurring(r) {
+  return {
+    id: r.id, dayOfWeek: r.day_of_week, slotId: r.slot_id, room: r.room,
+    type: r.type, name: r.name, department: r.department || '',
+    class: r.class || '', purpose: r.purpose || '',
+    headcount: r.headcount || 0, startDate: r.start_date,
+    endDate: r.end_date || null, isRecurring: true,
+  };
 }

@@ -9,11 +9,12 @@ export default function CancelBookingModal({ target, onSuccess, onClose }) {
 
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   // Recurring instances cannot be cancelled by users
   const isRecurring = booking?.isRecurringInstance || booking?.isRecurring;
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
     setError('');
     if (!code.trim()) { setError('請輸入取消碼'); return; }
@@ -21,8 +22,14 @@ export default function CancelBookingModal({ target, onSuccess, onClose }) {
       setError('取消碼不正確，請確認後再試');
       return;
     }
-    removeBooking(booking.id);
-    onSuccess();
+    setSubmitting(true);
+    try {
+      await removeBooking(booking.id);
+      onSuccess();
+    } catch {
+      setError('取消失敗，請重試');
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -76,9 +83,10 @@ export default function CancelBookingModal({ target, onSuccess, onClose }) {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-2 bg-red-500 text-white rounded-lg text-sm hover:bg-red-600 transition-colors font-medium"
+                  disabled={submitting}
+                  className="flex-1 py-2 bg-red-500 text-white rounded-lg text-sm hover:bg-red-600 transition-colors font-medium disabled:opacity-60"
                 >
-                  確認取消
+                  {submitting ? '處理中…' : '確認取消'}
                 </button>
               </div>
             </form>

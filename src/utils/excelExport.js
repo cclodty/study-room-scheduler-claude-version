@@ -1,12 +1,10 @@
 import * as XLSX from 'xlsx';
-import { getBookings, getRecurring } from './storage';
 import { TIME_SLOTS } from './constants';
 import { dayjs } from './dateUtils';
 
-export function exportBookingsToExcel(startDate, endDate) {
-  const bookings = getBookings().filter(
-    (b) => (!startDate || b.date >= startDate) && (!endDate || b.date <= endDate),
-  );
+// Accepts pre-fetched bookings array (already filtered by caller)
+export function exportBookingsToExcel(startDate, endDate, bookings) {
+  if (!bookings || bookings.length === 0) return;
 
   const rows = bookings.map((b) => {
     const slot = TIME_SLOTS.find((s) => s.id === b.slotId);
@@ -31,14 +29,10 @@ export function exportBookingsToExcel(startDate, endDate) {
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, '預約記錄');
 
-  // Auto column width
-  const colWidths = Object.keys(rows[0] || {}).map((k) => ({
-    wch: Math.max(k.length * 2, 12),
-  }));
+  const colWidths = Object.keys(rows[0]).map((k) => ({ wch: Math.max(k.length * 2, 12) }));
   ws['!cols'] = colWidths;
 
-  const filename = `研討室預約_${startDate || 'all'}_${endDate || 'all'}.xlsx`;
-  XLSX.writeFile(wb, filename);
+  XLSX.writeFile(wb, `研討室預約_${startDate || 'all'}_${endDate || 'all'}.xlsx`);
 }
 
 function formatWeekday(dateStr) {

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { TIME_SLOTS, STUDENT_DEFAULT_SLOTS } from '../utils/constants';
 import { addBooking } from '../utils/storage';
 
+
 function generateCode() {
   return String(Math.floor(1000 + Math.random() * 9000));
 }
@@ -19,8 +20,9 @@ export default function BookingModal({ target, onSuccess, onClose }) {
   const [purpose, setPurpose] = useState('');
   const [headcount, setHeadcount] = useState('');
   const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
     setError('');
 
@@ -48,8 +50,14 @@ export default function BookingModal({ target, onSuccess, onClose }) {
       createdAt: new Date().toISOString(),
     };
 
-    addBooking(booking);
-    onSuccess(code, booking);
+    setSubmitting(true);
+    try {
+      await addBooking(booking);
+      onSuccess(code, booking);
+    } catch (err) {
+      setError('提交失敗，請重試');
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -170,9 +178,10 @@ export default function BookingModal({ target, onSuccess, onClose }) {
             </button>
             <button
               type="submit"
-              className="flex-1 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 transition-colors font-medium"
+              disabled={submitting}
+              className="flex-1 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 transition-colors font-medium disabled:opacity-60"
             >
-              確認預約
+              {submitting ? '提交中…' : '確認預約'}
             </button>
           </div>
         </form>

@@ -1,62 +1,67 @@
 import { getBookingColor } from '../utils/colorUtils';
 
-export default function TimeSlotCell({ booking, room, blocked, mobile, onClick }) {
+/**
+ * Props:
+ *   booking   – booking object | null
+ *   room      – 'large' | 'small'
+ *   disabled  – boolean (past date or blocked)
+ *   past      – boolean (past date specifically)
+ *   mobile    – boolean
+ *   onClick   – handler
+ */
+export default function TimeSlotCell({ booking, room, disabled, past, mobile, onClick }) {
   const roomLabel = room === 'large' ? '大研討室' : '小研討室';
-  const roomShort = room === 'large' ? '大' : '小';
   const height = mobile ? 'h-14' : 'h-12';
 
-  // ── Blocked ─────────────────────────────────────────────────────────────
-  if (blocked) {
+  // ── Disabled / past (no booking) ─────────────────────────────────────────
+  if (disabled && !booking) {
     return (
-      <div className={`w-full ${height} rounded-lg flex items-center justify-center bg-slate-50`}>
-        <span className="text-slate-300 text-xs">—</span>
+      <div className={`w-full ${height} rounded-lg flex items-center justify-center
+        ${past ? 'bg-slate-200/60' : 'bg-red-50'}`}>
+        <span className={`text-xs font-medium ${past ? 'text-slate-400' : 'text-red-300'}`}>
+          {roomLabel}
+        </span>
       </div>
     );
   }
 
-  // ── Empty ────────────────────────────────────────────────────────────────
+  // ── Empty (available) ─────────────────────────────────────────────────────
   if (!booking) {
     return (
       <button onClick={onClick}
         className={`group w-full ${height} rounded-lg flex flex-col items-center justify-center gap-0.5
-          border border-dashed border-slate-200 hover:border-blue-300 hover:bg-blue-50 transition-all`}>
-        <span className="text-slate-300 text-xs group-hover:text-blue-400 transition-colors font-medium">
-          {roomShort}
+          border border-dashed border-slate-300 hover:border-blue-400 hover:bg-blue-50/70 transition-all`}>
+        <span className="text-slate-400 text-xs group-hover:text-blue-500 transition-colors font-medium leading-none">
+          {roomLabel}
         </span>
-        <span className="text-slate-200 text-base leading-none group-hover:text-blue-400 transition-colors">+</span>
+        <span className="text-slate-300 text-lg leading-none group-hover:text-blue-400 transition-colors">+</span>
       </button>
     );
   }
 
-  // ── Booked ───────────────────────────────────────────────────────────────
+  // ── Booked ────────────────────────────────────────────────────────────────
   const color = getBookingColor(booking);
   const isRecurring = booking.isRecurringInstance || booking.isRecurring;
-  const subLabel = booking.type === 'teacher' ? booking.department : booking.class;
+  // Show class for students, department for teachers
+  const subLabel = booking.type === 'student' ? booking.class : booking.department;
 
   return (
     <button onClick={onClick}
-      style={{
-        backgroundColor: color.bg,
-        borderLeftColor: color.border,
-        color: color.text,
-      }}
-      className={`w-full ${height} rounded-lg border-l-4 border border-transparent px-2
-        flex flex-col justify-center gap-0.5 text-left hover:brightness-95 transition-all overflow-hidden`}>
+      style={{ backgroundColor: color.bg }}
+      className={`w-full ${height} rounded-lg px-2 flex flex-col justify-center gap-0.5
+        text-left hover:brightness-90 active:brightness-75 transition-all overflow-hidden
+        ${disabled ? 'opacity-60 cursor-default' : ''}`}>
 
-      {/* Room badge */}
-      <div className="flex items-center gap-1">
-        <span className="text-xs leading-none font-semibold opacity-60">{roomShort}</span>
-        {isRecurring && <span className="text-xs leading-none opacity-50">↻</span>}
-      </div>
-
-      {/* Name */}
-      <span className="text-xs font-bold leading-snug truncate w-full">
+      {isRecurring && (
+        <span className="text-white/60 text-xs leading-none">↻ 固定</span>
+      )}
+      {/* Name — prominent */}
+      <span className="text-white font-bold text-sm leading-snug truncate w-full drop-shadow-sm">
         {booking.name}
       </span>
-
-      {/* Department / Class */}
+      {/* Dept / Class */}
       {subLabel && (
-        <span className="text-xs leading-none truncate w-full opacity-70">
+        <span className="text-white/85 text-xs leading-none truncate w-full">
           {subLabel}
         </span>
       )}
