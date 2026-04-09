@@ -100,21 +100,27 @@ export function verifyAdminPassword(pw) {
 // ── DB ↔ JS field mapping ────────────────────────────────────────────────────
 
 function bookingToDb(b) {
+  // Do NOT send created_at — let the DB default (now()) handle it
   return {
     id: b.id, date: b.date, slot_id: b.slotId, room: b.room,
-    type: b.type, name: b.name, department: b.department || null,
-    class: b.class || null, purpose: b.purpose || null,
-    headcount: b.headcount || null, cancel_code: b.cancelCode,
-    created_at: b.createdAt,
+    type: b.type, name: b.name,
+    department: b.department || null,
+    student_class: b.class || null,   // renamed to avoid keyword ambiguity
+    purpose: b.purpose || null,
+    headcount: b.headcount || null,
+    cancel_code: b.cancelCode,
   };
 }
 
 function dbToBooking(r) {
   return {
     id: r.id, date: r.date, slotId: r.slot_id, room: r.room,
-    type: r.type, name: r.name, department: r.department || '',
-    class: r.class || '', purpose: r.purpose || '',
-    headcount: r.headcount || 0, cancelCode: r.cancel_code,
+    type: r.type, name: r.name,
+    department: r.department || '',
+    class: r.student_class || '',     // map back to JS field name
+    purpose: r.purpose || '',
+    headcount: r.headcount || 0,
+    cancelCode: r.cancel_code,
     createdAt: r.created_at,
   };
 }
@@ -123,7 +129,7 @@ function recurringToDb(r) {
   return {
     id: r.id, day_of_week: r.dayOfWeek, slot_id: r.slotId, room: r.room,
     type: r.type, name: r.name, department: r.department || null,
-    class: r.class || null, purpose: r.purpose || null,
+    student_class: r.class || null, purpose: r.purpose || null,
     headcount: r.headcount || null, start_date: r.startDate,
     end_date: r.endDate || null, is_recurring: true,
   };
@@ -133,7 +139,7 @@ function dbToRecurring(r) {
   return {
     id: r.id, dayOfWeek: r.day_of_week, slotId: r.slot_id, room: r.room,
     type: r.type, name: r.name, department: r.department || '',
-    class: r.class || '', purpose: r.purpose || '',
+    class: r.student_class || '', purpose: r.purpose || '',
     headcount: r.headcount || 0, startDate: r.start_date,
     endDate: r.end_date || null, isRecurring: true,
   };

@@ -55,7 +55,10 @@ export default function BookingModal({ target, onSuccess, onClose }) {
       await addBooking(booking);
       onSuccess(code, booking);
     } catch (err) {
-      setError('提交失敗，請重試');
+      console.error('addBooking error:', err);
+      // Show the actual Supabase error message so we can diagnose
+      const msg = err?.message || JSON.stringify(err);
+      setError(`提交失敗：${msg}`);
       setSubmitting(false);
     }
   }
