@@ -56,9 +56,12 @@ export default function BookingModal({ target, onSuccess, onClose }) {
       onSuccess(code, booking);
     } catch (err) {
       console.error('addBooking error:', err);
-      // Show the actual Supabase error message so we can diagnose
-      const msg = err?.message || JSON.stringify(err);
-      setError(`提交失敗：${msg}`);
+      // Show full Supabase error details (code, message, details, hint)
+      const parts = [err?.message || JSON.stringify(err)];
+      if (err?.code) parts.push(`[code: ${err.code}]`);
+      if (err?.details) parts.push(err.details);
+      if (err?.hint) parts.push(err.hint);
+      setError(`提交失敗：${parts.join(' — ')}`);
       setSubmitting(false);
     }
   }

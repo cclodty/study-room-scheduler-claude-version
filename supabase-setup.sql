@@ -49,6 +49,16 @@ create table if not exists blocked_dates (
 );
 
 -- ============================================================
+-- 授權 anon 及 authenticated 角色讀寫所有表
+-- （這是 Supabase 前端 JS SDK 能存取表的必要條件）
+-- ============================================================
+grant usage on schema public to anon, authenticated;
+
+grant select, insert, update, delete on bookings      to anon, authenticated;
+grant select, insert, update, delete on recurring     to anon, authenticated;
+grant select, insert, update, delete on blocked_dates to anon, authenticated;
+
+-- ============================================================
 -- Row Level Security（允許所有人讀寫，無需登入）
 -- ============================================================
 alter table bookings      enable row level security;
