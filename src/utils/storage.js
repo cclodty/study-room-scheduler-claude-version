@@ -1,85 +1,82 @@
-import { supabase, supabaseConfigured } from './supabase';
+import { db, firebaseConfigured } from './firebase';
+import {
+  collection, doc, getDocs, setDoc, deleteDoc,
+  query, where, writeBatch,
+} from 'firebase/firestore';
 
 // Admin password stays local (device-specific auth, not shared)
 const ADMIN_PW_KEY = 'lrs_admin_password';
 const DEFAULT_ADMIN_PASSWORD = 'admin1234';
 
-function requireSupabase() {
-  if (!supabaseConfigured || !supabase) {
-    throw new Error('Supabase 未設定，請檢查 VITE_SUPABASE_URL 及 VITE_SUPABASE_ANON_KEY。');
+function requireFirebase() {
+  if (!firebaseConfigured || !db) {
+    throw new Error('Firebase 未設定，請檢查 VITE_FIREBASE_API_KEY 及 VITE_FIREBASE_PROJECT_ID。');
   }
 }
 
 // ── Bookings ─────────────────────────────────────────────────────────────────
 
 export async function getBookings() {
-  requireSupabase();
-  const { data, error } = await supabase.from('bookings').select('*');
-  if (error) { console.error('getBookings:', error); return []; }
-  return data.map(dbToBooking);
+  requireFirebase();
+  const snapshot = await getDocs(collection(db, 'bookings'));
+  return snapshot.docs.map((d) => dbToBooking({ id: d.id, ...d.data() }));
 }
 
 export async function addBooking(booking) {
-  requireSupabase();
-  const { error } = await supabase.from('bookings').insert(bookingToDb(booking));
-  if (error) throw error;
+  requireFirebase();
+  await setDoc(doc(db, 'bookings', booking.id), bookingToDb(booking));
 }
 
 export async function removeBooking(id) {
-  const { error } = await supabase.from('bookings').delete().eq('id', id);
-  if (error) throw error;
+  await deleteDoc(doc(db, 'bookings', id));
 }
 
 export async function removeBookingsByIds(ids) {
-  const { error } = await supabase.from('bookings').delete().in('id', ids);
-  if (error) throw error;
+  const batch = writeBatch(db);
+  ids.forEach((id) => batch.delete(doc(db, 'bookings', id)));
+  await batch.commit();
 }
 
 export async function removeBookingsByDateRange(startDate, endDate) {
-  const { error } = await supabase
-    .from('bookings')
-    .delete()
-    .gte('date', startDate)
-    .lte('date', endDate);
-  if (error) throw error;
+  const q = query(
+    collection(db, 'bookings'),
+    where('date', '>=', startDate),
+    where('date', '<=', endDate),
+  );
+  const snapshot = await getDocs(q);
+  const batch = writeBatch(db);
+  snapshot.docs.forEach((d) => batch.delete(d.ref));
+  await batch.commit();
 }
 
 // ── Recurring ─────────────────────────────────────────────────────────────────
 
 export async function getRecurring() {
-  const { data, error } = await supabase.from('recurring').select('*');
-  if (error) { console.error('getRecurring:', error); return []; }
-  return data.map(dbToRecurring);
+  const snapshot = await getDocs(collection(db, 'recurring'));
+  return snapshot.docs.map((d) => dbToRecurring({ id: d.id, ...d.data() }));
 }
 
 export async function addRecurring(rule) {
-  const { error } = await supabase.from('recurring').insert(recurringToDb(rule));
-  if (error) throw error;
+  await setDoc(doc(db, 'recurring', rule.id), recurringToDb(rule));
 }
 
 export async function removeRecurring(id) {
-  const { error } = await supabase.from('recurring').delete().eq('id', id);
-  if (error) throw error;
+  await deleteDoc(doc(db, 'recurring', id));
 }
 
 // ── Blocked dates ─────────────────────────────────────────────────────────────
 
 export async function getBlockedDates() {
-  const { data, error } = await supabase.from('blocked_dates').select('*');
-  if (error) { console.error('getBlockedDates:', error); return []; }
-  return data;
+  const snapshot = await getDocs(collection(db, 'blocked_dates'));
+  return snapshot.docs.map((d) => ({ date: d.id, ...d.data() }));
 }
 
 export async function addBlockedDate(entry) {
-  const { error } = await supabase
-    .from('blocked_dates')
-    .upsert({ date: entry.date, reason: entry.reason || '' });
-  if (error) throw error;
+  await setDoc(doc(db, 'blocked_dates', entry.date), { reason: entry.reason || '' });
 }
 
 export async function removeBlockedDate(date) {
-  const { error } = await supabase.from('blocked_dates').delete().eq('date', date);
-  if (error) throw error;
+  await deleteDoc(doc(db, 'blocked_dates', date));
 }
 
 // ── Admin password (localStorage) ────────────────────────────────────────────
@@ -100,15 +97,16 @@ export function verifyAdminPassword(pw) {
 // ── DB ↔ JS field mapping ────────────────────────────────────────────────────
 
 function bookingToDb(b) {
-  // Do NOT send created_at — let the DB default (now()) handle it
+  // id is the Firestore document ID, not stored as a field
   return {
-    id: b.id, date: b.date, slot_id: b.slotId, room: b.room,
+    date: b.date, slot_id: b.slotId, room: b.room,
     type: b.type, name: b.name,
     department: b.department || null,
-    student_class: b.class || null,   // renamed to avoid keyword ambiguity
+    student_class: b.class || null,
     purpose: b.purpose || null,
     headcount: b.headcount || null,
     cancel_code: b.cancelCode,
+    created_at: b.createdAt,
   };
 }
 
@@ -117,7 +115,7 @@ function dbToBooking(r) {
     id: r.id, date: r.date, slotId: r.slot_id, room: r.room,
     type: r.type, name: r.name,
     department: r.department || '',
-    class: r.student_class || '',     // map back to JS field name
+    class: r.student_class || '',
     purpose: r.purpose || '',
     headcount: r.headcount || 0,
     cancelCode: r.cancel_code,
@@ -127,7 +125,7 @@ function dbToBooking(r) {
 
 function recurringToDb(r) {
   return {
-    id: r.id, day_of_week: r.dayOfWeek, slot_id: r.slotId, room: r.room,
+    day_of_week: r.dayOfWeek, slot_id: r.slotId, room: r.room,
     type: r.type, name: r.name, department: r.department || null,
     student_class: r.class || null, purpose: r.purpose || null,
     headcount: r.headcount || null, start_date: r.startDate,

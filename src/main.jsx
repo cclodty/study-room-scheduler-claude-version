@@ -2,7 +2,7 @@ import { StrictMode, Component } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
-import { supabaseConfigured } from './utils/supabase.js'
+import { firebaseConfigured } from './utils/firebase.js'
 
 // Global error boundary so a crash shows a message instead of blank page
 class ErrorBoundary extends Component {
@@ -21,9 +21,9 @@ class ErrorBoundary extends Component {
           <hr style={{ border: 'none', borderTop: '1px solid #e2e8f0', margin: '16px 0' }} />
           <p style={{ color: '#64748b', fontSize: 14 }}>
             請確認 GitHub Secrets 已正確設定：<br />
-            <code style={{ background:'#f1f5f9', padding:'2px 6px', borderRadius:4 }}>VITE_SUPABASE_URL</code>
+            <code style={{ background:'#f1f5f9', padding:'2px 6px', borderRadius:4 }}>VITE_FIREBASE_API_KEY</code>
             {' '}及{' '}
-            <code style={{ background:'#f1f5f9', padding:'2px 6px', borderRadius:4 }}>VITE_SUPABASE_ANON_KEY</code>
+            <code style={{ background:'#f1f5f9', padding:'2px 6px', borderRadius:4 }}>VITE_FIREBASE_PROJECT_ID</code>
           </p>
         </div>
       );
@@ -34,14 +34,14 @@ class ErrorBoundary extends Component {
 
 // Show config warning banner if env vars missing (dev / misconfigured deploy)
 function ConfigWarning() {
-  if (supabaseConfigured) return null;
+  if (firebaseConfigured) return null;
   return (
     <div style={{
       background: '#fef3c7', borderBottom: '1px solid #fcd34d',
       padding: '10px 16px', textAlign: 'center',
       fontFamily: 'system-ui, sans-serif', fontSize: 14, color: '#92400e'
     }}>
-      ⚠️ Supabase 未設定（VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY 缺失），資料無法讀寫。
+      ⚠️ Firebase 未設定（VITE_FIREBASE_API_KEY / VITE_FIREBASE_PROJECT_ID 缺失），資料無法讀寫。
     </div>
   );
 }
