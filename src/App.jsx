@@ -24,6 +24,7 @@ export default function App() {
             </div>
             <div>
               <span className="text-sm font-bold text-slate-900 tracking-tight">圖書館研討室預約系統</span>
+              <span className="ml-2 text-[10px] text-slate-400 font-mono">build {__BUILD_TIME__}</span>
               {view === 'admin' && (
                 <span className="ml-2 text-xs bg-blue-100 text-blue-700 font-medium px-2 py-0.5 rounded-full">
                   管理員後台
