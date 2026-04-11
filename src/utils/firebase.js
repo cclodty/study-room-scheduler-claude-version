@@ -8,8 +8,16 @@ export const firebaseConfigured = Boolean(apiKey && projectId);
 
 let db = null;
 if (firebaseConfigured) {
-  const app = initializeApp({ apiKey, projectId });
-  db = getFirestore(app);
+  try {
+    const app = initializeApp({
+      apiKey,
+      projectId,
+      authDomain: `${projectId}.firebaseapp.com`,
+    });
+    db = getFirestore(app);
+  } catch (err) {
+    console.error('Firebase init error:', err);
+  }
 }
 
 export { db };
